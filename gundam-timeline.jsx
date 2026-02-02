@@ -1,0 +1,1211 @@
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+
+// Timeline data extracted from research document
+const timelineData = [
+  // UC 0068
+  {
+    id: 1,
+    date: "UC 0068",
+    dateSort: 68.0,
+    title: "Death of Zeon Zum Deikun",
+    description: "During a speech to the Diet attempting to declare Munzo's complete independence from the Earth Federation, Zeon Zum Deikun collapses and dies—officially from heart failure, though suspicions immediately fall on the Zabi family. His children Casval (age 11) and Artesia (age 7) flee Side 3 with the help of Jimba Ral.",
+    source: ["The Origin"],
+    faction: "zeon",
+    significance: "major",
+    episode: "Episode 1: Blue-Eyed Casval"
+  },
+  {
+    id: 2,
+    date: "UC 0068",
+    dateSort: 68.1,
+    title: "Sasro Zabi Assassinated",
+    description: "At Deikun's funeral, an explosion kills Sasro Zabi (Degwin's second son), accelerating the Zabi consolidation of power over Side 3.",
+    source: ["The Origin"],
+    faction: "zeon",
+    significance: "minor",
+    episode: "Episode 1: Blue-Eyed Casval"
+  },
+  // UC 0071
+  {
+    id: 3,
+    date: "UC 0071",
+    dateSort: 71.0,
+    title: "Republic of Zeon Established",
+    description: "Side 3 renamed from 'Autonomous Republic of Munzo' to 'Autonomous Republic of Zeon' in honor of the late Deikun. The Zabi family completes their political takeover: Degwin serves as chairman while Gihren controls propaganda.",
+    source: ["The Origin"],
+    faction: "zeon",
+    significance: "major",
+    episode: "Episode 2: Artesia's Sorrow"
+  },
+  {
+    id: 4,
+    date: "UC 0071",
+    dateSort: 71.1,
+    title: "Mobile Worker Development Begins",
+    description: "Secret mobile worker development begins under Dozle Zabi's direction, with Ramba Ral and the Black Tri-Stars (Gaia, Ortega, Mash) involved from the earliest stages.",
+    source: ["The Origin"],
+    faction: "zeon",
+    significance: "minor",
+    episode: "Episode 2: Artesia's Sorrow"
+  },
+  // UC 0074
+  {
+    id: 5,
+    date: "UC 0074",
+    dateSort: 74.0,
+    title: "Char Aznable Identity Assumed",
+    description: "Casval (now living as Édouard Mass) encounters the real Char Aznable at Texas Colony. After the real Char dies in a shuttle explosion meant for Casval, the future Red Comet assumes his identity and enrolls in Zeon's military academy, befriending Garma Zabi.",
+    source: ["The Origin"],
+    faction: "zeon",
+    significance: "major",
+    episode: "Episode 3: Dawn of Rebellion"
+  },
+  // UC 0077
+  {
+    id: 6,
+    date: "June 23, UC 0077",
+    dateSort: 77.0623,
+    title: "The Dawn Rebellion",
+    description: "Third-year military academy cadets assault the Earth Federation Forces garrison at Guardian Banchi, Side 3. Char masterminds the operation while Garma serves as the public face. MS-04 Bugu verification testing conducted. Char is expelled (treated officially as graduation) and enters Zeon military reserves.",
+    source: ["The Origin"],
+    faction: "zeon",
+    significance: "major",
+    episode: "Episode 3: Dawn of Rebellion"
+  },
+  // UC 0078
+  {
+    id: 7,
+    date: "UC 0078",
+    dateSort: 78.0,
+    title: "Principality of Zeon Declared",
+    description: "The Principality of Zeon formally declared. The MS-05 Zaku I, the first mass-produced mobile suit, is completed.",
+    source: ["The Origin"],
+    faction: "zeon",
+    significance: "major",
+    episode: "Episode 4: Eve of Destiny"
+  },
+  {
+    id: 8,
+    date: "UC 0078",
+    dateSort: 78.1,
+    title: "Battle of Mare Smythii",
+    description: "First recorded mobile suit combat in history. Ramba Ral in an MS-04 Bugu alongside the Black Tri-Stars and Char in MS-05 Zaku I units annihilate the Federation's Iron Cavalry Squadron (12 RCX-76-02 Guncannons) on the lunar surface. Dr. Minovsky dies during his defection attempt.",
+    source: ["The Origin"],
+    faction: "both",
+    significance: "critical",
+    episode: "Episode 4: Eve of Destiny"
+  },
+  // UC 0079 - January
+  {
+    id: 9,
+    date: "January 3, UC 0079",
+    dateSort: 79.0103,
+    title: "One Year War Begins",
+    description: "Principality of Zeon declares war on the Earth Federation at 07:00. Nuclear and chemical weapons (G3 nerve gas) deployed against Sides 1, 2, and 4. The One Week Battle begins—approximately half of humanity will perish.",
+    source: ["MSG", "MS IGLOO"],
+    faction: "zeon",
+    significance: "critical",
+    episode: null
+  },
+  {
+    id: 10,
+    date: "January 4, UC 0079",
+    dateSort: 79.0104,
+    title: "Operation British Launched",
+    description: "Zeon attempts colony drop using Side 2's Island Iffish. Jotunheim receives experimental Jormungand cannon.",
+    source: ["MSG", "MS IGLOO"],
+    faction: "zeon",
+    significance: "major",
+    episode: "MS IGLOO Ep.1"
+  },
+  {
+    id: 11,
+    date: "January 10, UC 0079",
+    dateSort: 79.0110,
+    title: "Sydney Destroyed",
+    description: "Colony breaks apart during descent; largest fragment destroys Sydney, Australia with 60,000 megaton impact. Millions killed instantly.",
+    source: ["MSG"],
+    faction: "zeon",
+    significance: "critical",
+    episode: null
+  },
+  {
+    id: 12,
+    date: "January 11, UC 0079",
+    dateSort: 79.0111,
+    title: "Side 6 Declares Neutrality",
+    description: "Side 6 (Riah Republic) declares neutrality in the conflict, becoming a refuge for civilians and later a battleground in its own right.",
+    source: ["MSG", "0080"],
+    faction: "neutral",
+    significance: "minor",
+    episode: null
+  },
+  {
+    id: 13,
+    date: "January 15-17, UC 0079",
+    dateSort: 79.0115,
+    title: "Battle of Loum",
+    description: "Decisive space battle at Side 5. Char Aznable destroys five battleships in a single engagement, earning the nickname 'Red Comet.' General Revil captured by the Black Tri-Stars. Zeon achieves overwhelming tactical victory.",
+    source: ["MSG", "The Origin", "MS IGLOO"],
+    faction: "both",
+    significance: "critical",
+    episode: "The Origin Ep.6 / MS IGLOO Ep.1"
+  },
+  {
+    id: 14,
+    date: "January 31, UC 0079",
+    dateSort: 79.0131,
+    title: "Antarctic Treaty Signed",
+    description: "Treaty prohibits nuclear, biological, and chemical weapons plus colony drops. General Revil, having escaped captivity, delivers famous 'Zeon is exhausted!' speech, rallying the Federation to continue fighting.",
+    source: ["MSG"],
+    faction: "both",
+    significance: "critical",
+    episode: null
+  },
+  // February-August 0079
+  {
+    id: 15,
+    date: "February 7, UC 0079",
+    dateSort: 79.0207,
+    title: "Zeon Earth Drop Operations Begin",
+    description: "Zeon forces begin landing on Earth, establishing footholds across multiple continents.",
+    source: ["MSG"],
+    faction: "zeon",
+    significance: "major",
+    episode: null
+  },
+  {
+    id: 16,
+    date: "March 1, UC 0079",
+    dateSort: 79.0301,
+    title: "Baikonur Captured",
+    description: "1st Terrestrial Mobile Division captures Baikonur spaceport, securing a critical launch facility for Zeon.",
+    source: ["MSG"],
+    faction: "zeon",
+    significance: "minor",
+    episode: null
+  },
+  {
+    id: 17,
+    date: "March 13, UC 0079",
+    dateSort: 79.0313,
+    title: "California and Hawaii Bases Captured",
+    description: "Zeon forces capture California Base and Hawaii Base, establishing dominance over the Pacific theater.",
+    source: ["MSG"],
+    faction: "zeon",
+    significance: "major",
+    episode: null
+  },
+  {
+    id: 18,
+    date: "April 1, UC 0079",
+    dateSort: 79.0401,
+    title: "Operation V and Vinson Plan Launched",
+    description: "Earth Federation launches Operation V (Gundam development program) and Vinson Plan (fleet reorganization). The counter-offensive begins in secret.",
+    source: ["MSG"],
+    faction: "federation",
+    significance: "critical",
+    episode: null
+  },
+  {
+    id: 19,
+    date: "May 9, UC 0079",
+    dateSort: 79.0509,
+    title: "Hildolfr Tank Test",
+    description: "YMT-05 Hildolfr experimental mobile tank tested in combat. Pilot Demeziere Sonnen killed in action.",
+    source: ["MS IGLOO"],
+    faction: "zeon",
+    significance: "minor",
+    episode: "MS IGLOO Ep.2"
+  },
+  {
+    id: 20,
+    date: "May 17, UC 0079",
+    dateSort: 79.0517,
+    title: "Solomon Fortress Completed",
+    description: "Solomon space fortress completed at Lagrange Point 5, becoming Zeon's primary space stronghold.",
+    source: ["MSG"],
+    faction: "zeon",
+    significance: "major",
+    episode: null
+  },
+  {
+    id: 21,
+    date: "July, UC 0079",
+    dateSort: 79.0700,
+    title: "White Base and Gundam Completed",
+    description: "Pegasus-class assault carrier White Base completed. RX-78 Gundam rollout achieved. Beam weapon miniaturization breakthrough allows mobile suits to carry beam rifles.",
+    source: ["MSG"],
+    faction: "federation",
+    significance: "critical",
+    episode: null
+  },
+  // September 0079
+  {
+    id: 22,
+    date: "September 18, UC 0079",
+    dateSort: 79.0918,
+    title: "Attack on Side 7 - Gundam's First Sortie",
+    description: "At 08:00, three Zaku II units infiltrate Side 7 Bunch 1 (Green Oasis). By 09:00, civilian Amuro Ray pilots the RX-78-2 Gundam for the first time, destroying two Zakus inside the colony. White Base escapes at 16:50 with over 100 civilian refugees.",
+    source: ["MSG"],
+    faction: "both",
+    significance: "critical",
+    episode: "MSG Episode 1"
+  },
+  // October 0079
+  {
+    id: 23,
+    date: "October 5, UC 0079",
+    dateSort: 79.1005,
+    title: "Garma Zabi Killed",
+    description: "Garma Zabi killed in action over Prince Rupert, British Columbia after being betrayed by Char Aznable, who manipulated him into a Federation ambush.",
+    source: ["MSG"],
+    faction: "zeon",
+    significance: "critical",
+    episode: null
+  },
+  {
+    id: 24,
+    date: "October 6, UC 0079",
+    dateSort: 79.1006,
+    title: "Garma's State Funeral",
+    description: "Gihren Zabi delivers famous 'Turn your grief to anger!' speech at Garma's funeral. First recorded use of 'Sieg Zeon!' rally cry.",
+    source: ["MSG"],
+    faction: "zeon",
+    significance: "major",
+    episode: null
+  },
+  {
+    id: 25,
+    date: "October 6, UC 0079",
+    dateSort: 79.10061,
+    title: "Shiro Amada Meets Aina Sahalin",
+    description: "Ensign Shiro Amada encounters Zeon pilot Aina Sahalin during a space rescue, beginning their star-crossed relationship.",
+    source: ["08th MS Team"],
+    faction: "both",
+    significance: "major",
+    episode: "08th MS Team Ep.1"
+  },
+  {
+    id: 26,
+    date: "October 8, UC 0079",
+    dateSort: 79.1008,
+    title: "Shiro Assumes Command of 08th MS Team",
+    description: "Shiro Amada takes command of the 08th MS Team in Southeast Asia, beginning ground operations against Zeon's Apsaras Project.",
+    source: ["08th MS Team"],
+    faction: "federation",
+    significance: "minor",
+    episode: "08th MS Team Ep.2"
+  },
+  {
+    id: 27,
+    date: "October 24, UC 0079",
+    dateSort: 79.1024,
+    title: "Zudah Field Testing",
+    description: "EMS-10 Zudah experimental mobile suit undergoes field testing. The unit's dangerous engine defects are concealed from test pilots.",
+    source: ["MS IGLOO"],
+    faction: "zeon",
+    significance: "minor",
+    episode: "MS IGLOO Ep.3"
+  },
+  // November 0079
+  {
+    id: 28,
+    date: "November 5, UC 0079",
+    dateSort: 79.1105,
+    title: "Ramba Ral Killed in Action",
+    description: "Legendary Zeon ace Ramba Ral dies during an assault on White Base, choosing death over capture. His final words become iconic.",
+    source: ["MSG"],
+    faction: "zeon",
+    significance: "major",
+    episode: null
+  },
+  {
+    id: 29,
+    date: "November 6, UC 0079",
+    dateSort: 79.1106,
+    title: "Black Tri-Stars Engage White Base",
+    description: "The Black Tri-Stars attack White Base. Lieutenant Matilda Ajan killed in action while protecting the ship with her Medea transport.",
+    source: ["MSG"],
+    faction: "both",
+    significance: "major",
+    episode: null
+  },
+  {
+    id: 30,
+    date: "November 7, UC 0079",
+    dateSort: 79.1107,
+    title: "Operation Odessa Begins",
+    description: "At 06:00, the Earth Federation commits 30% of its terrestrial forces to liberate the Odessa mining region from Zeon control. The largest ground offensive of the war.",
+    source: ["MSG"],
+    faction: "federation",
+    significance: "critical",
+    episode: null
+  },
+  {
+    id: 31,
+    date: "November 9, UC 0079",
+    dateSort: 79.1109,
+    title: "Operation Odessa Victory",
+    description: "EFF breaks final Zeon defensive line at Odessa. M'Quve escapes on the last HLV. Black Tri-Stars members Gaia and Ortega killed. Apsaras II flees toward Himalayas with Shiro's unit in pursuit.",
+    source: ["MSG", "08th MS Team"],
+    faction: "both",
+    significance: "critical",
+    episode: "08th MS Team Ep.6-7"
+  },
+  {
+    id: 32,
+    date: "November 30, UC 0079",
+    dateSort: 79.1130,
+    title: "Battle of Jaburo",
+    description: "Zeon launches massive assault on Federation headquarters at Jaburo. First deployment of mass-produced RGM-79 GM mobile suits. Char's Z'Gok infiltration fails. Zeon withdraws after heavy losses.",
+    source: ["MSG"],
+    faction: "both",
+    significance: "critical",
+    episode: null
+  },
+  // December 0079
+  {
+    id: 33,
+    date: "December 2, UC 0079",
+    dateSort: 79.1202,
+    title: "White Base Launches as Decoy",
+    description: "White Base designated as 13th Autonomous Squadron, launching as a decoy to draw Zeon attention. EFF 2nd Combined Space Fleet launches from Jaburo for the final offensive.",
+    source: ["MSG"],
+    faction: "federation",
+    significance: "major",
+    episode: null
+  },
+  {
+    id: 34,
+    date: "December 7, UC 0079",
+    dateSort: 79.1207,
+    title: "Siege of Apsaras Facility",
+    description: "08th MS Team conducts siege of the Apsaras mobile armor development facility on the Tibetan Plateau.",
+    source: ["08th MS Team"],
+    faction: "both",
+    significance: "major",
+    episode: "08th MS Team Ep.10-11"
+  },
+  {
+    id: 35,
+    date: "December 9, UC 0079",
+    dateSort: 79.1209,
+    title: "Cyclops Team Attacks Arctic Base",
+    description: "Zeon special forces Cyclops Team attacks Federation Arctic Base attempting to destroy the RX-78NT-1 'Alex' Gundam shuttle. The shuttle escapes successfully.",
+    source: ["0080"],
+    faction: "zeon",
+    significance: "major",
+    episode: "0080 Ep.1"
+  },
+  {
+    id: 36,
+    date: "December 12, UC 0079",
+    dateSort: 79.1212,
+    title: "Gundam NT-1 'Alex' Arrives at Side 6",
+    description: "The experimental Gundam NT-1 'Alex' arrives at Side 6 Bunch 35 (Libot colony) for final testing before delivery to Amuro Ray.",
+    source: ["0080"],
+    faction: "federation",
+    significance: "minor",
+    episode: "0080 Ep.2"
+  },
+  {
+    id: 37,
+    date: "December 15, UC 0079",
+    dateSort: 79.1215,
+    title: "California Base Recaptured",
+    description: "Earth Federation Forces recapture California Base from Zeon occupation.",
+    source: ["MSG"],
+    faction: "federation",
+    significance: "minor",
+    episode: null
+  },
+  {
+    id: 38,
+    date: "December 19, UC 0079",
+    dateSort: 79.1219,
+    title: "Operation Rubicon",
+    description: "Cyclops Team attacks Libot colony in Operation Rubicon. Steiner Hardy, Mikhail Kaminsky, and Gabriel Garcia killed in action. Bernie Wiseman survives.",
+    source: ["0080"],
+    faction: "both",
+    significance: "major",
+    episode: "0080 Ep.4"
+  },
+  {
+    id: 39,
+    date: "December 21, UC 0079",
+    dateSort: 79.1221,
+    title: "Nuclear Strike Ordered Against Side 6",
+    description: "Colonel Killing orders a nuclear strike against neutral Side 6 to destroy the Gundam Alex, violating the Antarctic Treaty.",
+    source: ["0080"],
+    faction: "zeon",
+    significance: "major",
+    episode: null
+  },
+  {
+    id: 40,
+    date: "December 24, UC 0079",
+    dateSort: 79.1224,
+    title: "Battle of Solomon",
+    description: "Earth Federation deploys the Solar System weapon against Solomon fortress. Dozle Zabi killed in action while piloting the massive Big Zam mobile armor in a desperate last stand.",
+    source: ["MSG"],
+    faction: "both",
+    significance: "critical",
+    episode: null
+  },
+  {
+    id: 41,
+    date: "December 25, UC 0079",
+    dateSort: 79.1225,
+    title: "Bernie Wiseman's Last Battle",
+    description: "Bernie Wiseman's Zaku II battles Christina MacKenzie's Gundam Alex in Libot colony. Bernie is killed, but his sacrifice alerts Zeon command to abort the nuclear strike on Side 6, saving the colony.",
+    source: ["0080"],
+    faction: "both",
+    significance: "critical",
+    episode: "0080 Ep.6"
+  },
+  {
+    id: 42,
+    date: "December 30, UC 0079",
+    dateSort: 79.1230,
+    title: "Solar Ray Fired",
+    description: "Zeon fires the Solar Ray colony laser during peace negotiations. General Revil, Prince Degwin Zabi, and one-third of the Federation fleet are annihilated.",
+    source: ["MSG"],
+    faction: "zeon",
+    significance: "critical",
+    episode: null
+  },
+  {
+    id: 43,
+    date: "December 31, UC 0079",
+    dateSort: 79.1231,
+    title: "Battle of A Baoa Qu",
+    description: "Final battle of the One Year War. Amuro Ray and Char Aznable's climactic mobile suit duel. Gihren Zabi killed by Kycilia. Kycilia Zabi killed by Char—the last of the Zabis. White Base destroyed.",
+    source: ["MSG", "MS IGLOO"],
+    faction: "both",
+    significance: "critical",
+    episode: "MS IGLOO Ep.3"
+  },
+  // UC 0080
+  {
+    id: 44,
+    date: "January 1, UC 0080",
+    dateSort: 80.0101,
+    title: "One Year War Ends",
+    description: "Armistice signed at Granada between the Earth Federation and the Republic of Zeon (successor government to the Principality). The One Year War ends after 363 days of conflict.",
+    source: ["MSG"],
+    faction: "both",
+    significance: "critical",
+    episode: null
+  },
+  // UC 0083
+  {
+    id: 45,
+    date: "October 13, UC 0083",
+    dateSort: 83.1013,
+    title: "Operation Stardust Begins",
+    description: "Anavel Gato steals the GP02A 'Physalis' Gundam equipped with a nuclear warhead from Torrington Base, Australia. The Delaz Fleet's Operation Stardust begins.",
+    source: ["0083"],
+    faction: "zeon",
+    significance: "critical",
+    episode: "0083 Ep.1"
+  },
+  {
+    id: 46,
+    date: "Late October, UC 0083",
+    dateSort: 83.1025,
+    title: "Pursuit of Gato",
+    description: "Federation pursuit of Gato through Australia and Africa. Gato escapes to space via HLV with the nuclear-armed Gundam.",
+    source: ["0083"],
+    faction: "both",
+    significance: "major",
+    episode: "0083 Ep.2-4"
+  },
+  {
+    id: 47,
+    date: "Early November, UC 0083",
+    dateSort: 83.1105,
+    title: "Delaz Declaration of War",
+    description: "Aiguille Delaz broadcasts declaration of war against the Earth Federation. Albion reaches Von Braun City in pursuit.",
+    source: ["0083"],
+    faction: "zeon",
+    significance: "major",
+    episode: "0083 Ep.5-6"
+  },
+  {
+    id: 48,
+    date: "November 10, UC 0083",
+    dateSort: 83.1110,
+    title: "Naval Review Massacre",
+    description: "During the Naval Review at Konpeitoh (former Solomon), Gato fires GP02A's nuclear bazooka, destroying two-thirds of the assembled Federation fleet in a single attack.",
+    source: ["0083"],
+    faction: "zeon",
+    significance: "critical",
+    episode: "0083 Ep.9"
+  },
+  {
+    id: 49,
+    date: "November 10-11, UC 0083",
+    dateSort: 83.11101,
+    title: "GP01 and GP02 Destroyed",
+    description: "Both GP01 and GP02 Gundams destroyed in combat. Cima Garahau's fleet hijacks agricultural colonies for the colony drop.",
+    source: ["0083"],
+    faction: "both",
+    significance: "major",
+    episode: "0083 Ep.10"
+  },
+  {
+    id: 50,
+    date: "November 12-13, UC 0083",
+    dateSort: 83.1112,
+    title: "GP03 Dendrobium Deployed",
+    description: "GP03 Dendrobium massive mobile armor system deployed. Delaz killed by Cima. Solar System II fires but fails to destroy the falling colony.",
+    source: ["0083"],
+    faction: "both",
+    significance: "major",
+    episode: "0083 Ep.12"
+  },
+  {
+    id: 51,
+    date: "November 13, UC 0083",
+    dateSort: 83.1113,
+    title: "Colony Drop on North America",
+    description: "Colony crashes into North American Midwest, causing massive destruction. Anavel Gato dies in a kamikaze attack against pursuing Federation forces. Nina Purpleton revealed as Gato's former lover.",
+    source: ["0083"],
+    faction: "both",
+    significance: "critical",
+    episode: "0083 Ep.13"
+  },
+  {
+    id: 52,
+    date: "December 4, UC 0083",
+    dateSort: 83.1204,
+    title: "Titans Founded",
+    description: "The Titans elite counter-insurgency force founded under Jamitov Hymen. All Operation Stardust records classified and erased.",
+    source: ["0083"],
+    faction: "federation",
+    significance: "critical",
+    episode: "0083 Ep.13 epilogue"
+  },
+  // UC 0085-0089
+  {
+    id: 53,
+    date: "July 31, UC 0085",
+    dateSort: 85.0731,
+    title: "30 Bunch Incident",
+    description: "Titans use poison gas against an entire colony at 30 Bunch, killing all inhabitants. This atrocity catalyzes the formation of the Anti-Earth Union Group (AEUG).",
+    source: ["Zeta Gundam"],
+    faction: "federation",
+    significance: "critical",
+    episode: null
+  },
+  {
+    id: 54,
+    date: "February 22, UC 0088",
+    dateSort: 88.0222,
+    title: "Battle of Gryps",
+    description: "Final battle of the Gryps Conflict. Titans organization destroyed. AEUG severely weakened. Char Aznable goes missing in action.",
+    source: ["Zeta Gundam"],
+    faction: "both",
+    significance: "critical",
+    episode: "Zeta Gundam Ep.50"
+  },
+  {
+    id: 55,
+    date: "October 31, UC 0088",
+    dateSort: 88.1031,
+    title: "Dublin Colony Drop",
+    description: "Neo Zeon forces drop a colony on Dublin, Ireland, causing massive civilian casualties and demonstrating their willingness to use terror tactics.",
+    source: ["ZZ Gundam"],
+    faction: "zeon",
+    significance: "critical",
+    episode: null
+  },
+  {
+    id: 56,
+    date: "January 17, UC 0089",
+    dateSort: 89.0117,
+    title: "First Neo Zeon War Ends",
+    description: "First Neo Zeon War concludes. Haman Karn dies in final battle with Judau Ashta.",
+    source: ["ZZ Gundam"],
+    faction: "both",
+    significance: "critical",
+    episode: null
+  },
+  // UC 0093
+  {
+    id: 57,
+    date: "March 4, UC 0093",
+    dateSort: 93.0304,
+    title: "5th Luna Drop",
+    description: "Char's Neo Zeon forces drop the asteroid 5th Luna on Federation headquarters at Lhasa, Tibet, devastating the Federation government.",
+    source: ["Char's Counterattack"],
+    faction: "zeon",
+    significance: "critical",
+    episode: null
+  },
+  {
+    id: 58,
+    date: "March 12, UC 0093",
+    dateSort: 93.0312,
+    title: "Axis Shock",
+    description: "Amuro Ray stops the Axis asteroid drop using the ν Gundam's psychoframe overload, creating a miraculous barrier of light. Both Amuro Ray and Char Aznable declared killed in action. The Second Neo Zeon War ends.",
+    source: ["Char's Counterattack"],
+    faction: "both",
+    significance: "critical",
+    episode: null
+  },
+  // UC 0095-0096
+  {
+    id: 59,
+    date: "December 3, UC 0095",
+    dateSort: 95.1203,
+    title: "Phenex Incident",
+    description: "RX-0 Unicorn Gundam 03 Phenex goes berserk during testing. Pilot Rita Bernal disappears with the unit, her consciousness absorbed into the psychoframe.",
+    source: ["Narrative"],
+    faction: "federation",
+    significance: "major",
+    episode: null
+  },
+  {
+    id: 60,
+    date: "April 7, UC 0096",
+    dateSort: 96.0407,
+    title: "Battle of Industrial 7",
+    description: "Neo Zeon remnants attack Industrial 7 colony. Banagher Links receives the Unicorn Gundam from his dying father Cardeas Vist, beginning the hunt for Laplace's Box.",
+    source: ["Unicorn"],
+    faction: "both",
+    significance: "critical",
+    episode: "Unicorn Ep.1"
+  },
+  {
+    id: 61,
+    date: "Mid-April, UC 0096",
+    dateSort: 96.0415,
+    title: "Battle of Palau",
+    description: "Federation and ECOAS forces assault Palau asteroid base. Banagher captured by Full Frontal, the 'Second Coming of Char.'",
+    source: ["Unicorn"],
+    faction: "both",
+    significance: "major",
+    episode: "Unicorn Ep.2-3"
+  },
+  {
+    id: 62,
+    date: "Late April, UC 0096",
+    dateSort: 96.0425,
+    title: "Clash at Laplace Ruins",
+    description: "Battle at the ruins of Laplace, the original Federation prime minister's residence. La+ program broadcasts the UC 0001 inauguration speech, revealing the first clue to the Box's location.",
+    source: ["Unicorn"],
+    faction: "both",
+    significance: "major",
+    episode: "Unicorn Ep.3"
+  },
+  {
+    id: 63,
+    date: "May 2, UC 0096",
+    dateSort: 96.0502,
+    title: "Third Battle of Dakar / Second Battle of Torrington",
+    description: "Simultaneous attacks: Neo Zeon remnants assault Dakar (40,000+ civilian deaths) while Zeon remnants on Earth attack Torrington Base.",
+    source: ["Unicorn"],
+    faction: "both",
+    significance: "critical",
+    episode: "Unicorn Ep.4-5"
+  },
+  {
+    id: 64,
+    date: "Mid-May, UC 0096",
+    dateSort: 96.0515,
+    title: "Battle on the Garuda",
+    description: "Combat aboard the massive Garuda transport plane. Psychoframe resonance enables Banagher's escape to orbit.",
+    source: ["Unicorn"],
+    faction: "both",
+    significance: "major",
+    episode: "Unicorn Ep.5"
+  },
+  {
+    id: 65,
+    date: "Late May, UC 0096",
+    dateSort: 96.0525,
+    title: "Final Battle at Industrial 7 - Laplace's Box Revealed",
+    description: "Final confrontation at Industrial 7. Full Frontal defeated. Gryps 2 colony laser beam deflected by combined psychoframe power. Laplace's Box revealed: the original UC Charter's Article 9 promising Newtype involvement in government.",
+    source: ["Unicorn"],
+    faction: "both",
+    significance: "critical",
+    episode: "Unicorn Ep.7"
+  },
+  // UC 0097
+  {
+    id: 66,
+    date: "UC 0097",
+    dateSort: 97.0500,
+    title: "Operation Phoenix Hunt",
+    description: "The Phenex Gundam reappears. Federation, Republic of Zeon, and Luio & Co. compete to capture the autonomous unit. Zoltan Akkanen (failed Full Frontal prototype) threatens colony-scale destruction before Jona Basta defeats him with Phenex assistance. Rita Bernal's soul confirmed to persist within the Phenex, which flies beyond the Earth Sphere.",
+    source: ["Narrative"],
+    faction: "both",
+    significance: "critical",
+    episode: null
+  }
+];
+
+// Source/series configuration - Colorblind-safe palette
+const sourceConfig = {
+  "MSG": { name: "Mobile Suit Gundam", color: "#F0C75E", year: "1979" },
+  "The Origin": { name: "The Origin", color: "#E69F00", year: "2015-2018" },
+  "08th MS Team": { name: "08th MS Team", color: "#009E73", year: "1996-1999" },
+  "0080": { name: "War in the Pocket", color: "#56B4E9", year: "1989" },
+  "0083": { name: "Stardust Memory", color: "#D55E00", year: "1991-1992" },
+  "MS IGLOO": { name: "MS IGLOO", color: "#CC79A7", year: "2004-2009" },
+  "Zeta Gundam": { name: "Zeta Gundam", color: "#0072B2", year: "1985-1986" },
+  "ZZ Gundam": { name: "ZZ Gundam", color: "#44AA99", year: "1986-1987" },
+  "Char's Counterattack": { name: "Char's Counterattack", color: "#D55E00", year: "1988" },
+  "Unicorn": { name: "Unicorn", color: "#DDDDDD", year: "2010-2014" },
+  "Narrative": { name: "Narrative", color: "#AA99DD", year: "2018" }
+};
+
+// Faction styling - Colorblind-safe palette (IBM Design / Wong palette inspired)
+// Blue (#0072B2) for Federation, Orange (#E69F00) for Zeon, Purple (#CC79A7) for both
+const factionStyles = {
+  federation: {
+    border: "#0072B2",
+    bg: "rgba(0, 114, 178, 0.15)",
+    accent: "#56B4E9",
+    label: "EARTH FEDERATION"
+  },
+  zeon: {
+    border: "#E69F00",
+    bg: "rgba(230, 159, 0, 0.15)",
+    accent: "#F0C75E",
+    label: "PRINCIPALITY OF ZEON"
+  },
+  both: {
+    border: "#CC79A7",
+    bg: "rgba(204, 121, 167, 0.15)",
+    accent: "#D9A6C2",
+    label: "MULTI-FACTION"
+  },
+  neutral: {
+    border: "#888888",
+    bg: "rgba(136, 136, 136, 0.15)",
+    accent: "#AAAAAA",
+    label: "NEUTRAL"
+  }
+};
+
+const significanceStyles = {
+  critical: { icon: "◆", label: "CRITICAL EVENT" },
+  major: { icon: "◇", label: "MAJOR EVENT" },
+  minor: { icon: "○", label: "MINOR EVENT" }
+};
+
+// Era definitions for visual grouping
+const eras = [
+  { start: 68, end: 78, name: "PREQUEL ERA", subtitle: "Rise of Zeon" },
+  { start: 79, end: 79.5, name: "ONE YEAR WAR", subtitle: "UC 0079" },
+  { start: 80, end: 83, name: "INTERWAR PERIOD", subtitle: "UC 0080-0083" },
+  { start: 84, end: 93, name: "GRYPS & NEO ZEON WARS", subtitle: "UC 0084-0093" },
+  { start: 94, end: 97, name: "LAPLACE INCIDENT", subtitle: "UC 0094-0097" }
+];
+
+function EventCard({ event, isExpanded, onToggle }) {
+  const faction = factionStyles[event.faction];
+  const significance = significanceStyles[event.significance];
+  
+  return (
+    <div 
+      onClick={onToggle}
+      style={{
+        position: 'relative',
+        marginLeft: '2rem',
+        marginBottom: '1rem',
+        cursor: 'pointer',
+        transition: 'all 0.3s',
+        borderLeft: `4px solid ${faction.border}`,
+        backgroundColor: isExpanded ? faction.bg : '#161b22',
+        borderRadius: '0 0.375rem 0.375rem 0'
+      }}
+    >
+      {/* Timeline node */}
+      <div 
+        style={{ 
+          position: 'absolute',
+          left: '-17px',
+          top: '1rem',
+          width: '1.75rem',
+          height: '1.75rem',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '0.875rem',
+          fontWeight: 'bold',
+          backgroundColor: faction.border,
+          boxShadow: `0 0 12px ${faction.border}`,
+          color: '#0d1117'
+        }}
+      >
+        {significance.icon}
+      </div>
+      
+      <div style={{ padding: '1rem', paddingLeft: '1.5rem' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <span 
+                style={{ 
+                  fontSize: '0.75rem', 
+                  fontFamily: 'monospace', 
+                  padding: '0.25rem 0.5rem', 
+                  borderRadius: '0.25rem',
+                  fontWeight: '600',
+                  backgroundColor: faction.bg, 
+                  color: faction.accent, 
+                  border: `1px solid ${faction.border}` 
+                }}
+              >
+                {event.date}
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#8b949e', fontWeight: '500' }}>{significance.label}</span>
+            </div>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#f0f6fc', lineHeight: 1.3, margin: 0 }}>
+              {event.title}
+            </h3>
+          </div>
+          <div 
+            style={{ 
+              fontSize: '1.25rem',
+              transition: 'transform 0.3s',
+              transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+              color: faction.accent,
+              marginTop: '0.25rem'
+            }}
+          >
+            ▼
+          </div>
+        </div>
+        
+        {/* Source badges */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem' }}>
+          {event.source.map((src, idx) => (
+            <span 
+              key={idx}
+              style={{ 
+                fontSize: '0.75rem',
+                padding: '0.25rem 0.5rem',
+                borderRadius: '0.25rem',
+                fontFamily: 'monospace',
+                fontWeight: '500',
+                backgroundColor: '#21262d',
+                color: sourceConfig[src]?.color || '#8b949e',
+                border: `1px solid ${sourceConfig[src]?.color || '#30363d'}`
+              }}
+            >
+              {src}
+            </span>
+          ))}
+        </div>
+        
+        {/* Expanded content */}
+        {isExpanded && (
+          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #30363d' }}>
+            <p style={{ color: '#c9d1d9', fontSize: '0.875rem', lineHeight: 1.6, marginBottom: '1rem', margin: 0, marginBottom: '1rem' }}>
+              {event.description}
+            </p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', fontSize: '0.75rem' }}>
+              <div>
+                <span style={{ color: '#8b949e', display: 'block', marginBottom: '0.25rem' }}>FACTION</span>
+                <span style={{ fontWeight: '600', color: faction.accent }}>{faction.label}</span>
+              </div>
+              {event.episode && (
+                <div>
+                  <span style={{ color: '#8b949e', display: 'block', marginBottom: '0.25rem' }}>EPISODE</span>
+                  <span style={{ color: '#c9d1d9' }}>{event.episode}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EraHeader({ era }) {
+  return (
+    <div style={{ position: 'relative', padding: '2rem 0', marginBottom: '1rem' }}>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center' }}>
+        <div style={{ width: '100%', borderTop: '1px solid #30363d' }}></div>
+      </div>
+      <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ 
+          padding: '0.75rem 1.5rem', 
+          backgroundColor: '#0d1117', 
+          border: '1px solid #30363d', 
+          borderRadius: '0.375rem' 
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '0.75rem', color: '#8b949e', letterSpacing: '0.1em', marginBottom: '0.25rem' }}>{era.subtitle}</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#f0f6fc', letterSpacing: '0.05em' }}>{era.name}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FilterPanel({ activeFilters, onFilterChange, allSources }) {
+  return (
+    <div style={{ 
+      backgroundColor: '#161b22', 
+      border: '1px solid #30363d', 
+      borderRadius: '0.5rem', 
+      padding: '1rem', 
+      marginBottom: '1.5rem' 
+    }}>
+      <div style={{ fontSize: '0.75rem', color: '#8b949e', letterSpacing: '0.1em', marginBottom: '0.75rem' }}>FILTER BY SERIES</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <button
+          onClick={() => onFilterChange('all')}
+          style={{
+            padding: '0.375rem 0.75rem',
+            borderRadius: '0.25rem',
+            fontSize: '0.75rem',
+            fontFamily: 'monospace',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            backgroundColor: activeFilters.length === 0 ? '#f0f6fc' : '#21262d',
+            color: activeFilters.length === 0 ? '#0d1117' : '#c9d1d9',
+            border: activeFilters.length === 0 ? 'none' : '1px solid #30363d',
+            fontWeight: activeFilters.length === 0 ? '600' : '400'
+          }}
+        >
+          ALL SERIES
+        </button>
+        {allSources.map(src => {
+          const isActive = activeFilters.includes(src);
+          const srcColor = sourceConfig[src]?.color || '#8b949e';
+          return (
+            <button
+              key={src}
+              onClick={() => onFilterChange(src)}
+              style={{
+                padding: '0.375rem 0.75rem',
+                borderRadius: '0.25rem',
+                fontSize: '0.75rem',
+                fontFamily: 'monospace',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                backgroundColor: isActive ? srcColor : '#21262d',
+                color: isActive ? '#0d1117' : srcColor,
+                border: `1px solid ${isActive ? srcColor : '#30363d'}`,
+                fontWeight: isActive ? '600' : '400'
+              }}
+            >
+              <span style={{ 
+                width: '0.5rem', 
+                height: '0.5rem', 
+                borderRadius: '50%', 
+                backgroundColor: isActive ? '#0d1117' : srcColor 
+              }}></span>
+              {src}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function StatsPanel({ events, filteredCount }) {
+  const criticalCount = events.filter(e => e.significance === 'critical').length;
+  
+  const stats = [
+    { label: 'TOTAL EVENTS', value: events.length, color: '#f0f6fc' },
+    { label: 'SHOWING', value: filteredCount, color: '#CC79A7' },
+    { label: 'CRITICAL', value: criticalCount, color: '#D55E00' },
+    { label: 'YEARS SPAN', value: '29', color: '#0072B2' }
+  ];
+  
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+      {stats.map((stat, idx) => (
+        <div key={idx} style={{ 
+          backgroundColor: '#161b22', 
+          border: '1px solid #30363d', 
+          borderRadius: '0.375rem', 
+          padding: '0.75rem', 
+          textAlign: 'center' 
+        }}>
+          <div style={{ fontSize: '1.5rem', fontWeight: 'bold', fontFamily: 'monospace', color: stat.color }}>{stat.value}</div>
+          <div style={{ fontSize: '0.75rem', color: '#8b949e', letterSpacing: '0.1em' }}>{stat.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function GundamTimeline() {
+  const [expandedId, setExpandedId] = useState(null);
+  const [activeFilters, setActiveFilters] = useState([]);
+  const timelineRef = useRef(null);
+  
+  // Force dark mode on mount
+  useEffect(() => {
+    document.body.style.backgroundColor = '#0d1117';
+    document.body.style.margin = '0';
+    return () => {
+      document.body.style.backgroundColor = '';
+    };
+  }, []);
+  
+  // Get all unique sources
+  const allSources = useMemo(() => {
+    const sources = new Set();
+    timelineData.forEach(event => event.source.forEach(s => sources.add(s)));
+    return Array.from(sources).sort((a, b) => {
+      const yearA = parseInt(sourceConfig[a]?.year) || 9999;
+      const yearB = parseInt(sourceConfig[b]?.year) || 9999;
+      return yearA - yearB;
+    });
+  }, []);
+  
+  // Filter events
+  const filteredEvents = useMemo(() => {
+    if (activeFilters.length === 0) return timelineData;
+    return timelineData.filter(event => 
+      event.source.some(s => activeFilters.includes(s))
+    );
+  }, [activeFilters]);
+  
+  // Group events by era
+  const eventsByEra = useMemo(() => {
+    const grouped = {};
+    eras.forEach(era => {
+      grouped[era.name] = filteredEvents.filter(e => 
+        e.dateSort >= era.start && e.dateSort < era.end + 1
+      );
+    });
+    return grouped;
+  }, [filteredEvents]);
+  
+  const handleFilterChange = (filter) => {
+    if (filter === 'all') {
+      setActiveFilters([]);
+    } else {
+      setActiveFilters(prev => 
+        prev.includes(filter) 
+          ? prev.filter(f => f !== filter)
+          : [...prev, filter]
+      );
+    }
+  };
+  
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#0d1117', color: '#e6edf3' }}>
+      {/* Header */}
+      <header style={{ 
+        position: 'sticky', 
+        top: 0, 
+        zIndex: 40, 
+        backgroundColor: 'rgba(13, 17, 23, 0.97)', 
+        backdropFilter: 'blur(8px)',
+        borderBottom: '1px solid #30363d'
+      }}>
+        <div style={{ maxWidth: '56rem', margin: '0 auto', padding: '1.5rem 1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+            <div style={{ 
+              width: '3rem', 
+              height: '3rem', 
+              borderRadius: '0.375rem', 
+              border: '2px solid #E69F00', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              backgroundColor: '#161b22'
+            }}>
+              <span style={{ color: '#E69F00', fontSize: '1.5rem', fontWeight: 'bold' }}>UC</span>
+            </div>
+            <div>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '0.05em', color: '#f0f6fc', margin: 0 }}>
+                UNIVERSAL CENTURY TIMELINE
+              </h1>
+              <div style={{ fontSize: '0.75rem', color: '#8b949e', letterSpacing: '0.1em' }}>
+                ANIMATED CANON CHRONOLOGY • UC 0068-0097
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.75rem', color: '#8b949e', marginTop: '1rem', fontFamily: 'monospace' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ width: '0.75rem', height: '0.75rem', borderRadius: '50%', backgroundColor: '#0072B2' }}></span>
+              FEDERATION
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ width: '0.75rem', height: '0.75rem', borderRadius: '50%', backgroundColor: '#E69F00' }}></span>
+              ZEON
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ width: '0.75rem', height: '0.75rem', borderRadius: '50%', backgroundColor: '#CC79A7' }}></span>
+              MULTI-FACTION
+            </span>
+          </div>
+        </div>
+      </header>
+      
+      {/* Main content */}
+      <main style={{ maxWidth: '56rem', margin: '0 auto', padding: '2rem 1rem' }}>
+        <StatsPanel events={timelineData} filteredCount={filteredEvents.length} />
+        <FilterPanel 
+          activeFilters={activeFilters} 
+          onFilterChange={handleFilterChange}
+          allSources={allSources}
+        />
+        
+        {/* Timeline */}
+        <div ref={timelineRef} style={{ position: 'relative' }}>
+          {/* Vertical line */}
+          <div style={{ 
+            position: 'absolute', 
+            left: '13px', 
+            top: 0, 
+            bottom: 0, 
+            width: '2px', 
+            background: 'linear-gradient(to bottom, #30363d, #484f58, #30363d)' 
+          }}></div>
+          
+          {eras.map(era => {
+            const eraEvents = eventsByEra[era.name];
+            if (eraEvents?.length === 0) return null;
+            
+            return (
+              <div key={era.name}>
+                <EraHeader era={era} />
+                {eraEvents?.map(event => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    isExpanded={expandedId === event.id}
+                    onToggle={() => setExpandedId(expandedId === event.id ? null : event.id)}
+                  />
+                ))}
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Footer */}
+        <footer style={{ marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid #30363d', textAlign: 'center' }}>
+          <div style={{ fontSize: '0.75rem', color: '#8b949e' }}>
+            <p style={{ marginBottom: '0.5rem' }}>DATA COMPILED FROM SUNRISE ANIMATED PRODUCTIONS</p>
+            <p style={{ color: '#484f58' }}>
+              Mobile Suit Gundam © Sunrise Inc. / Sotsu Agency
+            </p>
+          </div>
+        </footer>
+      </main>
+    </div>
+  );
+}
